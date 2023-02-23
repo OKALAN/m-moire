@@ -34,15 +34,15 @@
   become_user: ansible
   shell:
     cmd: |
-      kubectl apply -f /opt/docker/kuberfile/Moodle-on-kubernetes/mysql/pvc.yaml
-      kubectl apply -f /opt/docker/kuberfile/Moodle-on-kubernetes/mysql/deployment.yaml
+      kubectl apply -f https://github.com/OKALAN/m-moire/blob/main/Kubernetes/mariadb/mariadbpvc.yml
+      kubectl apply -f https://github.com/OKALAN/m-moire/blob/main/Kubernetes/mariadb/mariadbdeployment.yml
 
 - name: start moodle  containers
   become: yes
   become_user: ansible
   shell:
     cmd: |
-      kubectl apply -f /opt/docker/kuberfile/Moodle-on-kubernetes/moodle/pvc.yaml
-      kubectl apply -f /opt/docker/kuberfile/Moodle-on-kubernetes/moodle/deployment.yaml
+      kubectl apply -f https://github.com/OKALAN/m-moire/blob/main/Kubernetes/moodle/moodlepvc.yml
+      kubectl apply -f https://github.com/OKALAN/m-moire/blob/main/Kubernetes/moodle/moodledeployment.yml
 
                                                                                                                                                       190,0-1       Bot
