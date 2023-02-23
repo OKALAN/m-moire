@@ -1,10 +1,10 @@
-apiVersion: v1
-kind: PersistentVolume
-metadata:
+ apiVersion: v1
+ kind: PersistentVolume
+ metadata:
   name: moodle-mariadb-pv-volume
   labels:
     type: local
-spec:
+ spec:
   storageClassName: do-block-storage
   capacity:
     storage: 2Gi
@@ -14,25 +14,25 @@ spec:
     path: "/mnt/data"
   persistentVolumeReclaimPolicy: Retain
 ---
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
+ apiVersion: v1
+ kind: PersistentVolumeClaim
+ metadata:
   name: moodle-mariadb-pv-claim
-spec:
+ spec:
   storageClassName: do-block-storage
   accessModes:
     - ReadWriteOnce
- # resources:
-  #  requests:
-   #   storage: 2Gi
+  resources:
+    requests:
+      storage: 2Gi
 ---
-apiVersion: v1
-kind: Service
-metadata:
+ apiVersion: v1
+ kind: Service
+ metadata:
   name: moodle-mariadb
   labels:
     app: moodle
-spec:
+ spec:
   ports:
     - port: 3306
   selector:
@@ -40,13 +40,13 @@ spec:
     tier: mariadb
   clusterIP: None
 ---
-apiVersion: apps/v1
-kind: Deployment
-metadata:
+ apiVersion: apps/v1
+ kind: Deployment
+ metadata:
   name: moodle-mariadb
   labels:
     app: moodle
-spec:
+ spec:
   selector:
     matchLabels:
       app: moodle
