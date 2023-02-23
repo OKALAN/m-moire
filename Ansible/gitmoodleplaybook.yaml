@@ -1,48 +1,191 @@
-
-- name: Start the cluster
-  shell: kubeadm init  --cri-socket=unix:///var/run/cri-dockerd.sock >> cluster.txt
-  args:
-    chdir: $HOME
-    creates: cluster.txt
-
-- name: create .kube directory
+---
+- hosts: "servers"
+  remote_user: ansible
   become: yes
-  become_user: ansible
-  file:
-    path: $HOME/.kube
-    state: directory
-    mode: 0755
+  become_method: sudo
+  become_user: root
+  gather_facts: yes
+  connection: ssh
 
-- name: copy admin.conf to user's kube config
-  copy:
-    src: /etc/kubernetes/admin.conf
-    dest: $HOME/.kube/config
-    remote_src: yes
-    owner: ansible
+  tasks:
 
-- name: install Pod network
-  become: yes
-  become_user: ansible
-  shell: kubectl apply -f https://github.com/flannel-io/flannel/blob/master/Documentation/kube-flannel.yml >> pod_setup.txt
-  args:
-    chdir: $HOME
-    creates: pod_setup.txt
+    - name: Make the Swap inactive
+      command: swapoff -a
+
+    - name: Remove Swap entry from /etc/fstab.
+      lineinfile:
+        dest: /etc/fstab
+        regexp: swap
+        state: absent
+
+    - name: Load the following kernel modules on all the nodes
+      become: true
+      copy:
+        dest: /etc/modules-load.d/containerd.conf
+        content: |
+          overlay
+          br_netfilter
+
+    - name: Load overlay module
+      become: true
+      command: modprobe overlay
+
+    - name: Load br_netfilter module
+      become: true
+      command: modprobe br_netfilter
+
+    - name: Add Kubernetes sysctl settings
+      become: true
+      copy:
+        content: |
+          net.bridge.bridge-nf-call-ip6tables = 1
+          net.bridge.bridge-nf-call-iptables = 1
+          net.ipv4.ip_forward = 1
+        dest: /etc/sysctl.d/kubernetes.conf
+
+    - name: sys reload
+      command: sysctl --system
+    - name: Installing Prerequisites for Kubernetes
+        apt:
+          name:
+            - apt-transport-https
+            - ca-certificates
+            - curl
+            - gnupg-agent
+            - vim
+            - software-properties-common
+          state: present
+
+    - name: Add Docker’s official GPG key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Add Docker Repository
+      apt_repository:
+        repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu xenial stable
+        state: present
+        filename: docker
+        mode: 0600
+
+    - name: Install Docker Engine.
+      apt:
+        name:
+          - docker
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+        state: present
+
+    - name: Configure containerd
+      become: true
+      shell:
+        cmd: |
+          containerd config default | sudo tee /etc/containerd/config.toml >/dev/null 2>&1
+          sed -i 's/SystemdCgroup \= false/SystemdCgroup \= true/g' /etc/containerd/config.toml
+          systemctl restart containerd
+          systemctl enable containerd
+          git clone https://github.com/Mirantis/cri-dockerd.git
+          wget https://storage.googleapis.com/golang/getgo/installer_linux
+          chmod +x ./installer_linux
+          ./installer_linux
+          source ~/.bash_profile
+          cd cri-dockerd
+          mkdir bin
+          go build -o bin/cri-dockerd
+          mkdir -p /usr/local/bin
+          install -o root -g root -m 0755 bin/cri-dockerd /usr/local/bin/cri-dockerd
+          cp -a packaging/systemd/* /etc/systemd/system
+          sed -i -e 's,/usr/bin/cri-dockerd,/usr/local/bin/cri-dockerd,' /etc/systemd/system/cri-docker.service
+          systemctl daemon-reload
+          systemctl enable cri-docker.service
+          systemctl enable --now cri-docker.socket
+
+    - name: Enable service docker, and enable persistently
+      service:
+        name: docker
+        enabled: yes
+
+    - name: Install pip
+      apt:
+        name: python3-pip
+        state: present
+
+    - name: Install kubernetes module
+      pip:
+        name: kubernetes
+
+    - name: Add Google official GPG key
+      apt_key:
+        url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+        state: present
+
+    - name: Add Kubernetes Repository
+      apt_repository:
+        repo: deb http://apt.kubernetes.io/ kubernetes-xenial main
+        state: present
+        filename: kubernetes
+        mode: 0600
+
+    - name: Installing Kubernetes Cluster Packages.
+      apt:
+        name:
+          - kubeadm
+          - kubectl
+          - kubelet
+        state: present
+
+    - name: Enable service kubelet, and enable persistently
+      service:
+        name: kubelet
+        enabled: yes
+
+    - name: Start the cluster
+      shell: kubeadm init  --cri-socket=unix:///var/run/cri-dockerd.sock >> cluster.txt
+      args:
+        chdir: $HOME
+        creates: cluster.txt
+
+    - name: create .kube directory
+      become: yes
+      become_user: ansible
+      file:
+        path: $HOME/.kube
+        state: directory
+        mode: 0755
+
+    - name: copy admin.conf to user's kube config
+      copy:
+        src: /etc/kubernetes/admin.conf
+        dest: $HOME/.kube/config
+        remote_src: yes
+        owner: ansible
+
+    - name: install Pod network
+      become: yes
+      become_user: ansible
+      shell: kubectl apply -f https://github.com/flannel-io/flannel/blob/master/Documentation/kube-flannel.yml >> pod_setup.txt
+      args:
+        chdir: $HOME
+        creates: pod_setup.txt
 
 
-- name: start database container
-  become: yes
-  become_user: ansible
-  shell:
-    cmd: |
-      kubectl apply -f https://github.com/OKALAN/m-moire/blob/main/Kubernetes/mariadb/mariadbpvc.yml
-      kubectl apply -f https://github.com/OKALAN/m-moire/blob/main/Kubernetes/mariadb/mariadbdeployment.yml
+    - name: start database container
+      become: yes
+      become_user: ansible
+      shell:
+        cmd: |
+          #kubectl apply -f https://github.com/OKALAN/m-moire/blob/main/Kubernetes/mariadb/mariadbpvc.yaml
+          kubectl apply -f https://github.com/OKALAN/m-moire/blob/main/Kubernetes/mariadb/mariadbdeployment.yaml
 
-- name: start moodle  containers
-  become: yes
-  become_user: ansible
-  shell:
-    cmd: |
-      kubectl apply -f https://github.com/OKALAN/m-moire/blob/main/Kubernetes/moodle/moodlepvc.yml
-      kubectl apply -f https://github.com/OKALAN/m-moire/blob/main/Kubernetes/moodle/moodledeployment.yml
+    - name: start moodle  containers
+      become: yes
+      become_user: ansible
+      shell:
+        cmd: |
+          kubectl apply -f https://github.com/OKALAN/m-moire/blob/main/Kubernetes/moodle/moodlepvc.yaml
+          kubectl apply -f https://github.com/OKALAN/m-moire/blob/main/Kubernetes/moodle/moodledeployment.yaml
 
-                                                                                                                                                      190,0-1       Bot
+
+
+
