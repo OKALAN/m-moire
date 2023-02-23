@@ -1,0 +1,48 @@
+
+- name: Start the cluster
+  shell: kubeadm init  --cri-socket=unix:///var/run/cri-dockerd.sock >> cluster.txt
+  args:
+    chdir: $HOME
+    creates: cluster.txt
+
+- name: create .kube directory
+  become: yes
+  become_user: ansible
+  file:
+    path: $HOME/.kube
+    state: directory
+    mode: 0755
+
+- name: copy admin.conf to user's kube config
+  copy:
+    src: /etc/kubernetes/admin.conf
+    dest: $HOME/.kube/config
+    remote_src: yes
+    owner: ansible
+
+- name: install Pod network
+  become: yes
+  become_user: ansible
+  shell: kubectl apply -f https://github.com/flannel-io/flannel/blob/master/Documentation/kube-flannel.yml >> pod_setup.txt
+  args:
+    chdir: $HOME
+    creates: pod_setup.txt
+
+
+- name: start database container
+  become: yes
+  become_user: ansible
+  shell:
+    cmd: |
+      kubectl apply -f /opt/docker/kuberfile/Moodle-on-kubernetes/mysql/pvc.yaml
+      kubectl apply -f /opt/docker/kuberfile/Moodle-on-kubernetes/mysql/deployment.yaml
+
+- name: start moodle  containers
+  become: yes
+  become_user: ansible
+  shell:
+    cmd: |
+      kubectl apply -f /opt/docker/kuberfile/Moodle-on-kubernetes/moodle/pvc.yaml
+      kubectl apply -f /opt/docker/kuberfile/Moodle-on-kubernetes/moodle/deployment.yaml
+
+                                                                                                                                                      190,0-1       Bot
