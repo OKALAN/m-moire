@@ -1,9 +1,9 @@
-kind: Deployment
-metadata:
+ kind: Deployment
+ metadata:
   name: moodle
   labels:
     app: moodle
-spec:
+ spec:
   selector:
     matchLabels:
       app: moodle
