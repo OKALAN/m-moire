@@ -7,7 +7,7 @@
  spec:
   storageClassName: do-block-storage
   capacity:
-    storage: 20Gi
+    storage: 2Gi
   accessModes:
     - ReadWriteOnce
   hostPath:
@@ -24,5 +24,5 @@
     - ReadWriteOnce
   resources:
     requests:
-      storage: 20Gi
+      storage: 2Gi
                                                                                                                             12,1          All
