@@ -24,7 +24,7 @@
     requests:
       storage: 1Gi
   storageClassName: standard
-  selector:
-    matchLabels:
-      app: moodle
-      tier: mysql
+  #selector:
+   # matchLabels:
+    #  app: moodle
+     # tier: mysql
