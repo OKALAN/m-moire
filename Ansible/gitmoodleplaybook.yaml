@@ -1,4 +1,42 @@
 ---
+- name: Build Moodle Docker Image
+  hosts: localhost
+  gather_facts: false
+  become: yes
+  become_user: root
+  tasks:
+    - name: Update Package Index run as root
+      apt:
+        update_cache: true
+    - name: Install Docker dependencies run as root
+      apt:
+        name:
+          - docker.io
+          - docker-compose
+        state: present
+
+    - name: Build Moodle Docker image run as root
+      command: "docker build -t moodleoumou:latest3 /opt/docker/moodle/"
+
+    - name: Build MoodleDB Docker image run as root
+      command: "docker build -t moodleoumoudb:latest3 /opt/docker/mariadb/"
+
+    - name: Login Moodle Docker image to Docker Hub run as root
+      command: "docker login --username={{ 'okalan' }} --password={{ 'Akkipuden98!' }}"
+
+    - name: Tag Moodle Docker image to Docker Hub run as root
+      command: "docker tag moodleoumou:latest3 {{ 'okalan' }}/moodleoumou:latest3"
+
+    - name:  Push Moodle Docker image to Docker Hub run as root
+      command: "docker push {{ 'okalan' }}/moodleoumou:latest3"
+
+    - name: Tag MoodleDB Docker image to Docker Hub run as root
+      command: "docker tag moodleoumoudb:latest3 {{ 'okalan' }}/moodleoumoudb:latest3"
+
+    - name:  Push MoodleDB Docker image to Docker Hub run as root
+      command: "docker push {{ 'okalan' }}/moodleoumoudb:latest3"
+
+---
 - hosts: "servers"
   remote_user: ansible
   become: yes
@@ -141,7 +179,7 @@
         enabled: yes
 
     - name: Start the cluster
-      shell: kubeadm init  --cri-socket=unix:///var/run/cri-dockerd.sock >> cluster.txt
+      shell: kubeadm init  --cri-socket=unix:///var/run/cri-dockerd.sock --v=5>> cluster.txt
       args:
         chdir: $HOME
         creates: cluster.txt
