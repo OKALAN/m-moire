@@ -1,10 +1,10 @@
- kind: PersistentVolume
- apiVersion: v1
- metadata:
+kind: PersistentVolume
+apiVersion: v1
+metadata:
   name: moodle-pv-volume
   labels:
     type: local
- spec:
+spec:
   storageClassName: do-block-storage
   capacity:
     storage: 2Gi
@@ -13,16 +13,17 @@
   hostPath:
     path: "/mnt/data"
   persistentVolumeReclaimPolicy: Retain
+
 ---
- apiVersion: v1
- kind: PersistentVolumeClaim
- metadata:
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
   name: moodle-pv-claim
- spec:
+spec:
   storageClassName: do-block-storage
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
-     storage: 2Gi
-                                                                                                                            12,1          All
+      storage: 2Gi
