@@ -17,8 +17,6 @@ spec:
         app: moodle
         tier: frontend
     spec:
-      type: LoadBalancer
-      loadBalancerIP: 44.207.192.250
       containers:
         - image: okalan/moodleoumou:latest3
           name: moodle
@@ -34,13 +32,15 @@ spec:
             - name: DB_ENV_MYSQL_PASSWORD
               value: moodle
           ports:
-            - containerPort: 80
-              name: http
-            - containerPort: 6443
-              name: https-secure
+            - name: http
+              containerPort: 80
+            - name: https-secure
+              containerPort: 6443
           volumeMounts:
             - name: moodle-persistent-storage
               mountPath: /var/www/moodledata
+          type: LoadBalancer
+          loadBalancerIP: 44.207.192.250
       volumes:
         - name: moodle-persistent-storage
           persistentVolumeClaim:
