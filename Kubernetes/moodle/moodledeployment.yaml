@@ -31,7 +31,11 @@ spec:
               value: moodle
             - name: DB_ENV_MYSQL_PASSWORD
               value: moodle
+          type: LoadBalancer
+          loadBalancerIP: 44.207.192.250
           ports:
+            - port: 80
+              targetPort: 80
             - containerPort: 80
               name: http
             - containerPort: 6443
