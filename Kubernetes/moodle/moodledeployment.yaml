@@ -32,10 +32,12 @@ spec:
             - name: DB_ENV_MYSQL_PASSWORD
               value: moodle
           ports:
-            - name: http
-              containerPort: 80
-            - name: https-secure
-              containerPort: 6443
+            - port: 80
+              targetPort: 80
+            - containerPort: 80
+              name: http
+            - containerPort: 6443
+              name: https-secure
           volumeMounts:
             - name: moodle-persistent-storage
               mountPath: /var/www/moodledata
