@@ -33,9 +33,9 @@ spec:
               value: moodle
           ports:
             - containerPort: 80
-              name: https
+              name: http
             - containerPort: 6443
-              name: https
+              name: https-secure
           volumeMounts:
             - name: moodle-persistent-storage
               mountPath: /var/www/moodledata
