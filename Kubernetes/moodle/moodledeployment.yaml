@@ -1,10 +1,10 @@
- apiVersion: v1
- kind: Deployment
- metadata:
+apiVersion: apps/v1
+kind: Deployment
+metadata:
   name: moodle
   labels:
     app: moodle
- spec:
+spec:
   selector:
     matchLabels:
       app: moodle
@@ -26,13 +26,11 @@
             - name: DB_ENV_MYSQL_PASSWORD
               value: " "
             - name: DB_ENV_MYSQL_USER
-              value: root
+              value: moodlehomie
             - name: DB_ENV_MYSQL_DATABASE
               value: moodle
             - name: DB_ENV_MYSQL_PASSWORD
               value: moodle
-            - name: MOODLE_URL
-              value: http://<domain>
           ports:
             - containerPort: 80
               name: https
@@ -45,4 +43,3 @@
         - name: moodle-persistent-storage
           persistentVolumeClaim:
             claimName: moo-dle-pv-claim
-
