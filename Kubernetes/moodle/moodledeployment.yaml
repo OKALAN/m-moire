@@ -36,6 +36,7 @@ spec:
               name: http
             - containerPort: 6443
               name: https-secure
+          type: LoadBalancer
           volumeMounts:
             - name: moodle-persistent-storage
               mountPath: /var/www/moodledata
