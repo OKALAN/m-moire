@@ -1,5 +1,5 @@
-apiVersion: apps/v2
 kind: Deployment
+apiVersion: apps/v1
 metadata:
   name: moodle
   labels:
