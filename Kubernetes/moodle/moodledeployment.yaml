@@ -32,8 +32,6 @@ spec:
             - name: DB_ENV_MYSQL_PASSWORD
               value: moodle
           ports:
-            - port: 80
-              targetPort: 80
             - containerPort: 80
               name: http
             - containerPort: 6443
@@ -41,8 +39,6 @@ spec:
           volumeMounts:
             - name: moodle-persistent-storage
               mountPath: /var/www/moodledata
-          type: LoadBalancer
-          loadBalancerIP: 44.207.192.250
       volumes:
         - name: moodle-persistent-storage
           persistentVolumeClaim:
