@@ -42,4 +42,4 @@ spec:
       volumes:
         - name: moodle-persistent-storage
           persistentVolumeClaim:
-            claimName: moo-dle-pv-claim
+            claimName: moodle-pv-claim
